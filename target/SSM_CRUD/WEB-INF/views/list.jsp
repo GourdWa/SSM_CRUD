@@ -6,6 +6,7 @@
   To change this template use File | Settings | File Templates.
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" isELIgnored="false" %>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
 <head>
     <title>员工列表</title>
@@ -46,21 +47,24 @@
                     <th>deptName</th>
                     <th>操作</th>
                 </tr>
-                <tr>
-                    <td>1</td>
-                    <td>aaa</td>
-                    <td>男</td>
-                    <td>aaa@qq.com</td>
-                    <td>开发部</td>
-                    <td>
-                        <button class="btn btn-primary btn-sm">
-                            <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span> 编辑
-                        </button>
-                        <button class="btn btn-danger btn-sm">
-                            <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>删除
-                        </button>
-                    </td>
-                </tr>
+
+                <c:forEach items="${requestScope.pageInfo.list}" var="emp">
+                    <tr>
+                        <td>${emp.empId}</td>
+                        <td>${emp.empName}</td>
+                        <td>${emp.gender=="m"?"男":"女"}</td>
+                        <td>${emp.email}</td>
+                        <td>${emp.department.deptName}</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm">
+                                <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span> 编辑
+                            </button>
+                            <button class="btn btn-danger btn-sm">
+                                <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>删除
+                            </button>
+                        </td>
+                    </tr>
+                </c:forEach>
             </table>
         </div>
     </div>
@@ -68,32 +72,45 @@
     <div class="row">
         <%--       分页文字信息 --%>
         <div class="col-md-6">
-            当前记录数
+            当前第${requestScope.pageInfo.pageNum}页，一共${requestScope.pageInfo.pages}页，总共${requestScope.pageInfo.total}条记录
         </div>
         <%--        分页条信息--%>
         <div class="col-md-6">
             <nav aria-label="Page navigation">
                 <ul class="pagination">
                     <li>
-                        <a href="#">首页</a>
+                        <a href="${requestScope.APP_PATH}/emps">首页</a>
                     </li>
+                    <%--                    如果有上一页才显示上一页的图标--%>
+                    <c:if test="${requestScope.pageInfo.hasPreviousPage}">
+                        <li>
+                            <a href="${requestScope.APP_PATH}/emps?pn=${requestScope.pageInfo.pageNum - 1}"
+                               aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    </c:if>
+
+                    <%--                    遍历获取pageInfo中的页码数组--%>
+                    <c:forEach items="${requestScope.pageInfo.navigatepageNums}" var="pageNum">
+                        <c:if test="${pageNum==requestScope.pageInfo.pageNum}">
+                            <li class="active"><a href="#">${pageNum}</a></li>
+                        </c:if>
+                        <c:if test="${pageNum!=requestScope.pageInfo.pageNum}">
+                            <li><a href="${requestScope.APP_PATH}/emps?pn=${pageNum}">${pageNum}</a></li>
+                        </c:if>
+                    </c:forEach>
+                    <%--       判断是否有下一页，如果有才显示 --%>
+                    <c:if test="${requestScope.pageInfo.hasNextPage}">
+                        <li>
+                            <a href="${requestScope.APP_PATH}/emps?pn=${requestScope.pageInfo.pageNum + 1}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </c:if>
+
                     <li>
-                        <a href="#" aria-label="Previous">
-                            <span aria-hidden="true">&laquo;</span>
-                        </a>
-                    </li>
-                    <li><a href="#">1</a></li>
-                    <li><a href="#">2</a></li>
-                    <li><a href="#">3</a></li>
-                    <li><a href="#">4</a></li>
-                    <li><a href="#">5</a></li>
-                    <li>
-                        <a href="#" aria-label="Next">
-                            <span aria-hidden="true">&raquo;</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#">末页</a>
+                        <a href="${requestScope.APP_PATH}/emps?pn=${requestScope.pageInfo.pages}">末页</a>
                     </li>
                 </ul>
             </nav>
