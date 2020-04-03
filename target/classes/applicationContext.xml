@@ -11,7 +11,7 @@
         <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
     </context:component-scan>
     <!--  引入外部的配置文件  -->
-    <context:property-placeholder location="dbconfig.properties"/>
+    <context:property-placeholder location="classpath:dbconfig.properties"/>
 
     <!--============================================================================-->
     <!-- 配置数据库连接池   -->
@@ -56,4 +56,11 @@
             <tx:method name="get*" read-only="true"/>
         </tx:attributes>
     </tx:advice>
+
+    <!--  配置一个可以执行批量的SqlSession  -->
+    <bean class="org.mybatis.spring.SqlSessionTemplate" id="sqlSession">
+        <constructor-arg name="sqlSessionFactory" ref="sqlSessionFactoryBean"/>
+        <!--    批量插入    -->
+        <constructor-arg name="executorType" value="BATCH"/>
+    </bean>
 </beans>
