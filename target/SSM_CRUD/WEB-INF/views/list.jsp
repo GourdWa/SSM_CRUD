@@ -40,7 +40,7 @@
         <div class=".col-md-12">
             <table class="table table-hover">
                 <tr>
-                    <th>#</th>
+                    <th>id</th>
                     <th>empName</th>
                     <th>gender</th>
                     <th>email</th>
