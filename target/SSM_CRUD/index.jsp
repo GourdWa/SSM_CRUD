@@ -59,33 +59,42 @@
     <%--    分页信息--%>
     <div class="row">
         <%--       分页文字信息 --%>
-        <div class="col-md-6">
-            当前第 页，一共 页，总共 条记录
+        <div class="col-md-6" id="page_info_area">
+
         </div>
         <%--        分页条信息--%>
-        <div class="col-md-6">
+        <div class="col-md-6" id="page_nav_area">
 
         </div>
     </div>
 </div>
 <script type="text/javascript">
-    //页面加载完成后发送AJAX请求要到分页数据
+    //页面加载完成后发送AJAX请求要到分页数据,直接去首页
     $(function () {
+        to_page(1)
+    })
+
+    //页面跳转
+    function to_page(pn) {
         $.ajax({
             url: "${requestScope.APP_PATH}/emps",
-            data: "pn=1",
+            data: "pn=" + pn,
             type: "GET",
             success: function (result) {
                 // console.log(result.msg.extend.pageInfo)
                 //1、解析并显示员工信息
                 build_emps_table(result)
                 //2、解析并显示分页信息
-
+                build_page_info(result)
+                //3、构建导航条
+                build_page_nav(result)
             }
         })
-    })
+    }
+
 
     function build_emps_table(result) {
+        $("#emps_table tbody").empty();
         var emps = result.msg.extend.pageInfo.list;
         //index索引；item当前的元素
         $.each(emps, function (index, item) {
@@ -95,10 +104,10 @@
             var emailId = $("<td></td>").append(item.email);
             var deptNameId = $("<td></td>").append(item.department.deptName);
 
-            var editBtn =　$("<button></button>").addClass("btn btn-primary btn-sm")
+            var editBtn = $("<button></button>").addClass("btn btn-primary btn-sm")
                 .append($("<span></span>")).addClass("glyphicon glyphicon-pencil")
                 .append("编辑")
-            var deleteBtn =　$("<button></button>").addClass("btn btn-danger btn-sm")
+            var deleteBtn = $("<button></button>").addClass("btn btn-danger btn-sm")
                 .append($("<span></span>")).addClass("glyphicon glyphicon-trash")
                 .append("删除")
             var btnTd = $("<td></td>").append(editBtn).append(" ").append(deleteBtn);
@@ -112,8 +121,67 @@
         })
     }
 
-    function build_page_nav(result) {
+    //解析显示分页信息
+    function build_page_info(result) {
+        $("#page_info_area").empty();
+        $("#page_info_area").append("当前第" + result.msg.extend.pageInfo.pageNum +
+            " 页，一共 " + result.msg.extend.pageInfo.pages + "页，总共" + result.msg.extend.pageInfo.total + " 条记录")
+    }
 
+    //解析显示分页条
+    function build_page_nav(result) {
+        $("#page_nav_area").empty();
+        //***************************构建元素**********************************
+        var ul = $("<ul></ul>").addClass("pagination");
+        var firstPageLi = $("<li></li>").append($("<a></a>").append("首页").attr("href", "#"));
+        var prePageLi = $("<li></li>").append($("<a></a>").append("&laquo;"));
+        //如果没有前一页
+        if (result.msg.extend.pageInfo.hasPreviousPage == false) {
+            firstPageLi.addClass("disabled");
+            prePageLi.addClass("disabled");
+        } else {
+            //否则绑定跳转事件
+            firstPageLi.click(function () {
+                to_page(1);
+            })
+            prePageLi.click(function () {
+                to_page(result.msg.extend.pageInfo.pageNum - 1)
+            })
+        }
+        var nextPageLi = $("<li></li>").append($("<a></a>").append("&raquo;"));
+        var lastPageLi = $("<li></li>").append($("<a></a>").append("末页").attr("href", "#"));
+        //如果没有下一页
+        if (result.msg.extend.pageInfo.hasNextPage == false) {
+            nextPageLi.addClass("disabled");
+            lastPageLi.addClass("disabled");
+        } else {
+            //否则绑定跳转事件
+            lastPageLi.click(function () {
+                to_page(result.msg.extend.pageInfo.pages)
+            })
+            nextPageLi.click(function () {
+                to_page(result.msg.extend.pageInfo.pageNum + 1)
+            })
+        }
+        ul.append(firstPageLi).append(prePageLi);
+
+
+        $.each(result.msg.extend.pageInfo.navigatepageNums, function (index, item) {
+
+            var numLi = $("<li></li>").append($("<a></a>").append(item).attr("href", "#"));
+            if (result.msg.extend.pageInfo.pageNum == item) {
+                numLi.addClass("active")
+            }
+            //点击页码后跳转
+            numLi.click(function () {
+                to_page(item)
+            })
+            ul.append(numLi);
+        })
+        ul.append(nextPageLi).append(lastPageLi);
+        var navEle = ($("<nav></nav>").attr("aria-label", "Page navigation")).append(ul);
+        $("#page_nav_area").append(navEle)
+        // navEle.appendTo("#page_nav_area");
     }
 </script>
 </body>
