@@ -41,6 +41,8 @@ public class EmployeeController {
         return mv;
     }
 
+//    第一版，不利用AJAX请求
+    /*
     //@RequestMapping("/emps")
     public ModelAndView getEmps(@RequestParam(value = "pn", required = false, defaultValue = "1") Integer pn, ModelAndView mv) {
         //查询之前调用，传入页码以及每页的大小
@@ -54,5 +56,7 @@ public class EmployeeController {
         mv.setViewName("list");
 //        测试git pull
         return mv;
-    }
+    }*/
+
+
 }
