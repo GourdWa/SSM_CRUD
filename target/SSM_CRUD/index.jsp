@@ -73,7 +73,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-                <button type="button" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-primary" id="emp_save_btn">保存</button>
             </div>
         </div>
     </div>
@@ -129,6 +129,8 @@
     </div>
 </div>
 <script type="text/javascript">
+
+    var totalRecord;
     //页面加载完成后发送AJAX请求要到分页数据,直接去首页
     $(function () {
         to_page(1)
@@ -186,6 +188,7 @@
         $("#page_info_area").empty();
         $("#page_info_area").append("当前第" + result.msg.extend.pageInfo.pageNum +
             " 页，一共 " + result.msg.extend.pageInfo.pages + "页，总共" + result.msg.extend.pageInfo.total + " 条记录")
+        totalRecord = result.msg.extend.pageInfo.total;
     }
 
     //解析显示分页条
@@ -250,6 +253,7 @@
             backdrop: "static"
         })
     })
+
     //查出所有的部门信息并显示在下拉列表中
     function getDepts() {
         $.ajax(
@@ -258,14 +262,34 @@
                 type: "GET",
                 success: function (result) {
                     $("#dept_add_select").empty()
-                    $.each(result.msg.extend.depts,function (index, item) {
-                        var optionEle = $("<option></option>").append(item.deptName).attr("value",item.deptId);
+                    $.each(result.msg.extend.depts, function (index, item) {
+                        var optionEle = $("<option></option>").append(item.deptName).attr("value", item.deptId);
                         $("#dept_add_select").append(optionEle)
                     })
                 }
             }
         )
     }
+
+    //员工保存单击事件
+    $("#emp_save_btn").click(function () {
+        //    1、模态框中填写的数据提交服务器保存，借助表单序列化机制
+        $("#empAddModal form").serialize()
+        //    2、发送AJAX请求保存员工
+            $.ajax({
+                url:"${requestScope.APP_PATH}/emp",
+                type:"POST",
+                data:$("#empAddModal form").serialize(),
+                success:function (result) {
+                    // alert(result.msg.msg)
+                //    当员工保存成功，关闭模态框并来到最后一页展示刚才保存的数据
+                    $('#empAddModal').modal('hide');
+                    //发送AJAX请求，跳转到最后一页，因为PageHelper插件，只要大于最后页码的数字都会跳转到最后一页
+                    to_page(totalRecord+1);
+                }
+            })
+
+    })
 
 </script>
 </body>

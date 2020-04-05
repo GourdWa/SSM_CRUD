@@ -26,4 +26,9 @@ public class EmployeeService {
         //引入pageHelper分页插件
         return employeeMapper.selectByExampleWithDept(null);
     }
+
+    //员工保存
+    public void saveEmp(Employee employee) {
+        employeeMapper.insertSelective(employee);
+    }
 }
