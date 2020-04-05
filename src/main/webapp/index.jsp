@@ -38,6 +38,7 @@
                         <div class="col-sm-10">
                             <input type="text" name="empName" class="form-control" id="empName_add_input"
                                    placeholder="EmpName">
+                            <span class="help-block"></span>
                         </div>
                     </div>
                     <div class="form-group">
@@ -45,6 +46,7 @@
                         <div class="col-sm-10">
                             <input type="text" name="email" class="form-control" id="email_add_input"
                                    placeholder="email@qq.com">
+                            <span class="help-block"></span>
                         </div>
                     </div>
                     <%--                        性别选择框--%>
@@ -247,12 +249,23 @@
 
     //点击新增按钮弹出模态框
     $("#emp_add_modal_btn").click(function () {
+        //模态框弹出前都清除表单数据，DOM对象才有重置，这里只重置了数据，用下面的自定义代替
+        // $("#empAddModal form")[0].reset()
+        //完整重置
+        reset_form("#empAddModal form");
         //发送AJJAX请求，查出部门信息，显示下拉列表中
         getDepts();
         $("#empAddModal").modal({
             backdrop: "static"
         })
     })
+
+    function reset_form(ele) {
+        $(ele)[0].reset();
+        //清空表单样式
+        $(ele).find("*").removeClass("has-error has-success");
+        $(ele).find(".help-block").text("")
+    }
 
     //查出所有的部门信息并显示在下拉列表中
     function getDepts() {
@@ -271,26 +284,90 @@
         )
     }
 
+    //校验表单数据
+    function validate_add_form() {
+        //1、使用正则表达式校验
+        var empName = $("#empName_add_input").val();
+        var regName = /(^[a-zA-Z0-9_-]{6,16}$)|(^[\u2E80-\u9FFF]{2,5})/;
+        if (!regName.test(empName)) {
+            // alert("用户名可以是2-5位种种或6-16位英文");
+            show_validate_msg("#empName_add_input", "error", "用户名可以是2-5位种种或6-16位英文");
+            return false;
+        } else {
+            show_validate_msg("#empName_add_input", "success", "");
+        }
+        var email = $("#email_add_input").val();
+        var regEmail = /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/
+        if (!regEmail.test(email)) {
+            // alert("邮箱格式不符合要求")
+            show_validate_msg("#email_add_input", "error", "邮箱格式不符合要求")
+            return false;
+        } else {
+            show_validate_msg("#email_add_input", "success", "")
+        }
+        return true;
+    }
+
+    function show_validate_msg(ele, status, msg) {
+        //    清楚当前元素校验
+        $(ele).parent().removeClass("has-success has-error");
+        $(ele).next("span").text(" ");
+        if (status == "success") {
+            $(ele).parent().addClass("has-success");
+            $(ele).next("span").text(msg)
+        } else if (status == "error") {
+            $(ele).parent().addClass("has-error");
+            $(ele).next("span").text(msg)
+        }
+    }
+
     //员工保存单击事件
     $("#emp_save_btn").click(function () {
         //    1、模态框中填写的数据提交服务器保存，借助表单序列化机制
-        $("#empAddModal form").serialize()
+        // $("#empAddModal form").serialize()
+        //对提交的数据进行校验
+        if (!validate_add_form()) {
+            return false;
+        }
+        //判断用户名校验是否成功，如果成功才继续
+        if ($("#emp_save_btn").attr("ajax-va") == "error") {
+            return false;
+        }
         //    2、发送AJAX请求保存员工
-            $.ajax({
-                url:"${requestScope.APP_PATH}/emp",
-                type:"POST",
-                data:$("#empAddModal form").serialize(),
-                success:function (result) {
-                    // alert(result.msg.msg)
+        $.ajax({
+            url: "${requestScope.APP_PATH}/emp",
+            type: "POST",
+            data: $("#empAddModal form").serialize(),
+            success: function (result) {
+                // alert(result.msg.msg)
                 //    当员工保存成功，关闭模态框并来到最后一页展示刚才保存的数据
-                    $('#empAddModal').modal('hide');
-                    //发送AJAX请求，跳转到最后一页，因为PageHelper插件，只要大于最后页码的数字都会跳转到最后一页
-                    to_page(totalRecord+1);
-                }
-            })
+                $('#empAddModal').modal('hide');
+                //发送AJAX请求，跳转到最后一页，因为PageHelper插件，只要大于最后页码的数字都会跳转到最后一页
+                to_page(totalRecord + 1);
+            }
+        })
 
     })
 
+    //    服务端的校验，避免用户名重复
+    $("#empName_add_input").change(function () {
+        //    发送AJAX请求，校验用户名是否可用
+        $.ajax({
+            url: "${requestScope.APP_PATH}/checkuser",
+            type: "GET",
+            data: "empName=" + $("#empName_add_input").val(),
+            success: function (result) {
+                console.log(result)
+                if (result.msg.code == 100) {
+                    show_validate_msg("#empName_add_input", "success", "用户名可用");
+                    $("#emp_save_btn").attr("ajax-va", "success");
+                } else {
+                    show_validate_msg("#empName_add_input", "error", result.msg.extend.va_msg);
+                    $("#emp_save_btn").attr("ajax-va", "error");
+                }
+            }
+        })
+    })
 </script>
 </body>
 </html>

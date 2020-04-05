@@ -28,7 +28,7 @@ public class EmployeeController {
     EmployeeService employeeService;
 
     @RequestMapping("/emps")
-    public ModelAndView getEmpsWithJson(@RequestParam(value = "pn", required = false, defaultValue = "1") Integer pn){
+    public ModelAndView getEmpsWithJson(@RequestParam(value = "pn", required = false, defaultValue = "1") Integer pn) {
         ModelAndView mv = new ModelAndView();
         //查询之前调用，传入页码以及每页的大小
         PageHelper.startPage(pn, 5);
@@ -36,8 +36,8 @@ public class EmployeeController {
         List<Employee> emps = employeeService.getAll();
         //使用PageInfo包装查询之后的结果，只需要将PageInfo交给页面即可
         //封装了详细的分页信息，包括查询出来的数据，可以传入连续显示的页数
-        PageInfo page = new PageInfo(emps,5);
-        mv.addObject(Msg.success().add("pageInfo",page));
+        PageInfo page = new PageInfo(emps, 5);
+        mv.addObject(Msg.success().add("pageInfo", page));
         mv.setView(new MappingJackson2JsonView());
         return mv;
     }
@@ -62,14 +62,44 @@ public class EmployeeController {
 
     /**
      * 员工保存
+     *
      * @return
      */
-    @RequestMapping(value = "/emp",method = RequestMethod.POST)
-    public ModelAndView saveEmp(Employee employee){
+    @RequestMapping(value = "/emp", method = RequestMethod.POST)
+    public ModelAndView saveEmp(Employee employee) {
         ModelAndView mv = new ModelAndView();
         mv.setView(new MappingJackson2JsonView());
         employeeService.saveEmp(employee);
         mv.addObject(Msg.success());
         return mv;
     }
+
+    /**
+     * 检测用户名是否可用
+     *
+     * @param empName
+     * @return
+     */
+    @RequestMapping("/checkuser")
+    public ModelAndView checkuser(@RequestParam("empName") String empName) {
+        ModelAndView mv = new ModelAndView();
+        mv.setView(new MappingJackson2JsonView());
+        //先判断用户名是否是合法的表达式
+        String regx = "(^[a-zA-Z0-9_-]{6,16}$)|(^[\u2E80-\u9FFF]{2,5})";
+        //如果匹配失败
+        if (!empName.matches(regx)) {
+            mv.addObject(Msg.fail().add("va_msg", "用户名必须是6-16位数字和字母的组合或者2-5位中文"));
+            return mv;
+        }
+        //数据库用户名重复校验
+        boolean b = employeeService.checkUser(empName);
+        if (b) {
+            //可用
+            mv.addObject(Msg.success());
+        } else {
+            mv.addObject(Msg.fail().add("va_msg", "用户名不可用"));
+        }
+        return mv;
+    }
+
 }

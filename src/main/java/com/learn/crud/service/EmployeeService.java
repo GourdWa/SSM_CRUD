@@ -1,6 +1,7 @@
 package com.learn.crud.service;
 
 import com.learn.crud.bean.Employee;
+import com.learn.crud.bean.EmployeeExample;
 import com.learn.crud.dao.EmployeeMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ public class EmployeeService {
 
     /**
      * 查询所有员工
+     *
      * @return
      */
     public List<Employee> getAll() {
@@ -30,5 +32,19 @@ public class EmployeeService {
     //员工保存
     public void saveEmp(Employee employee) {
         employeeMapper.insertSelective(employee);
+    }
+
+    /**
+     * 检验用户名是否可用,如果等于0，返回true则可用，返回false则不可用
+     *
+     * @param empName
+     * @return
+     */
+    public boolean checkUser(String empName) {
+        EmployeeExample example = new EmployeeExample();
+        EmployeeExample.Criteria criteria = example.createCriteria();
+        criteria.andEmpNameEqualTo(empName);
+        long count = employeeMapper.countByExample(example);
+        return count == 0;
     }
 }
