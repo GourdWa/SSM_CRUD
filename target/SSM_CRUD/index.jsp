@@ -568,7 +568,7 @@
                 url: "${requestScope.APP_PATH}/emp/" + del_ids,
                 type: "DELETE",
                 success: function (result) {
-                    alert(result.msg)
+                    // alert(result.msg)
                     to_page(currentPage)
                 }
             })

@@ -44,11 +44,17 @@
 
         <!--     Spring测试模块   -->
         <!-- https://mvnrepository.com/artifact/org.springframework/spring-test -->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework</groupId>-->
+<!--            <artifactId>spring-test</artifactId>-->
+<!--            <version>5.2.2.RELEASE</version>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
             <version>5.2.2.RELEASE</version>
-            <scope>test</scope>
+            <scope>compile</scope>
         </dependency>
 
         <!--    引入Mybatis  -->
@@ -106,12 +112,12 @@
             <artifactId>mybatis-generator-core</artifactId>
             <version>1.3.5</version>
         </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-test</artifactId>
-            <version>5.2.2.RELEASE</version>
-            <scope>compile</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.springframework</groupId>-->
+<!--            <artifactId>spring-test</artifactId>-->
+<!--            <version>5.2.2.RELEASE</version>-->
+<!--            <scope>compile</scope>-->
+<!--        </dependency>-->
         <!--引入PageHelper-->
         <dependency>
             <groupId>com.github.pagehelper</groupId>
