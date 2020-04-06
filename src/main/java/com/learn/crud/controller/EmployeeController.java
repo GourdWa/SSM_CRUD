@@ -10,14 +10,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.json.MappingJackson2JsonView;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -136,12 +134,31 @@ public class EmployeeController {
         return mv;
     }
 
-    @RequestMapping(value = "/emp/{empId}",method = RequestMethod.PUT)
+    @RequestMapping(value = "/emp/{empId}", method = RequestMethod.PUT)
     public ModelAndView updateEmp(Employee employee) {
         ModelAndView mv = new ModelAndView();
         mv.setView(new MappingJackson2JsonView());
         employeeService.updateEmp(employee);
         mv.addObject(Msg.success());
         return mv;
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "/emp/{ids}", method = RequestMethod.DELETE)
+    public Msg deleteEmp(@PathVariable String ids) {
+        if (ids.contains("-")) {
+            //批量删除
+            List<Integer> del_ids = new ArrayList<>();
+            String[] str_ids = ids.split("-");
+            for (String str_id : str_ids) {
+                del_ids.add(Integer.parseInt(str_id));
+            }
+//            System.out.println(del_ids.toString());
+            employeeService.deleteBatch(del_ids);
+        } else {
+            employeeService.deleteEmp(Integer.parseInt(ids));
+        }
+
+        return Msg.success();
     }
 }
