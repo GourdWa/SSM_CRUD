@@ -145,3 +145,21 @@ public class MvcTest {
 }
 
 ```
+#### 六、直接利用AJAX发送PUT请求用于数据更新  
+1. 方式一  
+发送POST请求，但是通过_method参数将其封装为PUT请求，也就是之前学习的利用POST请求发送PUT请求  
+```
+...
+type: "POST",
+data:$("#empUpdateModal form").serialize()+"&_method=PUT",
+...
+```
+2. 方式二  
+直接发送PUT请求，但是需要通过***HttpPutFormContentFilter过滤器***过滤，因此需要在web.xml中配置该过滤器，然后就可以通过AJAX请求直接发送PUT请求
+```
+...
+type: "PUT",
+data:$("#empUpdateModal form").serialize(),
+...`
+
+```

@@ -7,13 +7,20 @@ import com.learn.crud.bean.Msg;
 import com.learn.crud.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.Errors;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.json.MappingJackson2JsonView;
 
+import javax.validation.Valid;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 处理员工CRUD请求
@@ -66,12 +73,24 @@ public class EmployeeController {
      * @return
      */
     @RequestMapping(value = "/emp", method = RequestMethod.POST)
-    public ModelAndView saveEmp(Employee employee) {
+    public ModelAndView saveEmp(@Valid Employee employee, BindingResult result) {
         ModelAndView mv = new ModelAndView();
         mv.setView(new MappingJackson2JsonView());
-        employeeService.saveEmp(employee);
-        mv.addObject(Msg.success());
-        return mv;
+        Map<String, Object> map = new HashMap<>();
+        if (result.hasErrors()) {
+            List<FieldError> errors = result.getFieldErrors();
+            for (FieldError error : errors) {
+                System.out.println("错误的字段名：" + error.getField());
+                System.out.println("错误的信息：" + error.getDefaultMessage());
+                map.put(error.getField(), error.getDefaultMessage());
+            }
+            mv.addObject(Msg.fail().add("errorField", map));
+            return mv;
+        } else {
+            employeeService.saveEmp(employee);
+            mv.addObject(Msg.success());
+            return mv;
+        }
     }
 
     /**
@@ -102,4 +121,27 @@ public class EmployeeController {
         return mv;
     }
 
+    /**
+     * 查询员工
+     *
+     * @param id
+     * @return
+     */
+    @RequestMapping(value = "/emp/{id}", method = RequestMethod.GET)
+    public ModelAndView getEmp(@PathVariable("id") Integer id) {
+        ModelAndView mv = new ModelAndView();
+        mv.setView(new MappingJackson2JsonView());
+        Employee employee = employeeService.getEmp(id);
+        mv.addObject(Msg.success().add("emp", employee));
+        return mv;
+    }
+
+    @RequestMapping(value = "/emp/{empId}",method = RequestMethod.PUT)
+    public ModelAndView updateEmp(Employee employee) {
+        ModelAndView mv = new ModelAndView();
+        mv.setView(new MappingJackson2JsonView());
+        employeeService.updateEmp(employee);
+        mv.addObject(Msg.success());
+        return mv;
+    }
 }

@@ -82,6 +82,65 @@
 </div>
 
 
+<%--员工修改的模态框--%>
+<div class="modal fade" id="empUpdateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">员工修改</h4>
+            </div>
+            <div class="modal-body">
+                <%--                表单--%>
+                <form class="form-horizontal">
+                    <div class="form-group">
+                        <label for="empName_add_input" class="col-sm-2 control-label">EmpName</label>
+                        <div class="col-sm-10">
+                            <p class="form-control-static" id="empName_update_static"></p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email_add_input" class="col-sm-2 control-label">Email</label>
+                        <div class="col-sm-10">
+                            <input type="text" name="email" class="form-control" id="email_update_input"
+                                   placeholder="email@qq.com">
+                            <span class="help-block"></span>
+                        </div>
+                    </div>
+                    <%--                        性别选择框--%>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">Gender</label>
+                        <div class="col-sm-10">
+                            <label class="radio-inline">
+                                <input type="radio" name="gender" id="gender1_update_input" value="m" checked="checked">
+                                男
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" name="gender" id="gender2_update_input" value="f"> 女
+                            </label>
+                        </div>
+                    </div>
+                    <%--          部门选择框          --%>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">deptName</label>
+                        <div class="col-sm-4">
+                            <%--                            部门id提交即可--%>
+                            <select class="form-control" name="dId" id="dept_update_select">
+
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" id="emp_update_btn">更新</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <%--  搭建显示页面  --%>
 <div class="container">
     <%--   标题行 --%>
@@ -133,6 +192,7 @@
 <script type="text/javascript">
 
     var totalRecord;
+    var currentPage;
     //页面加载完成后发送AJAX请求要到分页数据,直接去首页
     $(function () {
         to_page(1)
@@ -168,10 +228,12 @@
             var emailId = $("<td></td>").append(item.email);
             var deptNameId = $("<td></td>").append(item.department.deptName);
 
-            var editBtn = $("<button></button>").addClass("btn btn-primary btn-sm")
+            var editBtn = $("<button></button>").addClass("btn btn-primary btn-sm edit_btn")
                 .append($("<span></span>")).addClass("glyphicon glyphicon-pencil")
                 .append("编辑")
-            var deleteBtn = $("<button></button>").addClass("btn btn-danger btn-sm")
+            //为编辑按钮添加一个自定义属性，表示当前员工id
+            editBtn.attr("edit-id", item.empId);
+            var deleteBtn = $("<button></button>").addClass("btn btn-danger btn-sm delete_btn")
                 .append($("<span></span>")).addClass("glyphicon glyphicon-trash")
                 .append("删除")
             var btnTd = $("<td></td>").append(editBtn).append(" ").append(deleteBtn);
@@ -191,6 +253,7 @@
         $("#page_info_area").append("当前第" + result.msg.extend.pageInfo.pageNum +
             " 页，一共 " + result.msg.extend.pageInfo.pages + "页，总共" + result.msg.extend.pageInfo.total + " 条记录")
         totalRecord = result.msg.extend.pageInfo.total;
+        currentPage = result.msg.extend.pageInfo.pageNum
     }
 
     //解析显示分页条
@@ -254,7 +317,7 @@
         //完整重置
         reset_form("#empAddModal form");
         //发送AJJAX请求，查出部门信息，显示下拉列表中
-        getDepts();
+        getDepts("#dept_add_select");
         $("#empAddModal").modal({
             backdrop: "static"
         })
@@ -268,16 +331,16 @@
     }
 
     //查出所有的部门信息并显示在下拉列表中
-    function getDepts() {
+    function getDepts(ele) {
         $.ajax(
             {
                 url: "${requestScope.APP_PATH}/depts",
                 type: "GET",
                 success: function (result) {
-                    $("#dept_add_select").empty()
+                    $(ele).empty()
                     $.each(result.msg.extend.depts, function (index, item) {
                         var optionEle = $("<option></option>").append(item.deptName).attr("value", item.deptId);
-                        $("#dept_add_select").append(optionEle)
+                        $(ele).append(optionEle)
                     })
                 }
             }
@@ -292,6 +355,9 @@
         if (!regName.test(empName)) {
             // alert("用户名可以是2-5位种种或6-16位英文");
             show_validate_msg("#empName_add_input", "error", "用户名可以是2-5位种种或6-16位英文");
+            return false;
+        } else if ($("#emp_save_btn").attr("ajax-va") == "error") {
+            show_validate_msg("#empName_add_input", "error", "用户名不可用");
             return false;
         } else {
             show_validate_msg("#empName_add_input", "success", "");
@@ -325,7 +391,7 @@
     $("#emp_save_btn").click(function () {
         //    1、模态框中填写的数据提交服务器保存，借助表单序列化机制
         // $("#empAddModal form").serialize()
-        //对提交的数据进行校验
+        //对提交的数据进行校验,前端校验
         if (!validate_add_form()) {
             return false;
         }
@@ -340,10 +406,30 @@
             data: $("#empAddModal form").serialize(),
             success: function (result) {
                 // alert(result.msg.msg)
-                //    当员工保存成功，关闭模态框并来到最后一页展示刚才保存的数据
-                $('#empAddModal').modal('hide');
-                //发送AJAX请求，跳转到最后一页，因为PageHelper插件，只要大于最后页码的数字都会跳转到最后一页
-                to_page(totalRecord + 1);
+                //判断后端JSR303校验是否成功
+                if (result.msg.code == 100) {
+                    //    当员工保存成功，关闭模态框并来到最后一页展示刚才保存的数据
+                    $('#empAddModal').modal('hide');
+                    //发送AJAX请求，跳转到最后一页，因为PageHelper插件，只要大于最后页码的数字都会跳转到最后一页
+                    to_page(totalRecord + 1);
+                } else {
+                    //提示失败信息
+                    if (result.msg.extend.errorField.email != undefined) {
+                        show_validate_msg("#email_add_input", "error", result.msg.extend.errorField.email);
+                    }
+                    if (result.msg.extend.errorField.empName != undefined) {
+                        show_validate_msg("#empName_add_input", "error", result.msg.extend.errorField.empName);
+                    }
+                    return;
+                    //显示错误信息
+                    // console.log(result.msg)
+                }
+
+                //第一版本不利用JSR303校验
+                // //    当员工保存成功，关闭模态框并来到最后一页展示刚才保存的数据
+                // $('#empAddModal').modal('hide');
+                // //发送AJAX请求，跳转到最后一页，因为PageHelper插件，只要大于最后页码的数字都会跳转到最后一页
+                // to_page(totalRecord + 1);
             }
         })
 
@@ -357,7 +443,7 @@
             type: "GET",
             data: "empName=" + $("#empName_add_input").val(),
             success: function (result) {
-                console.log(result)
+                // console.log(result)
                 if (result.msg.code == 100) {
                     show_validate_msg("#empName_add_input", "success", "用户名可用");
                     $("#emp_save_btn").attr("ajax-va", "success");
@@ -365,6 +451,67 @@
                     show_validate_msg("#empName_add_input", "error", result.msg.extend.va_msg);
                     $("#emp_save_btn").attr("ajax-va", "error");
                 }
+            }
+        })
+    })
+
+
+    //    给编辑按钮绑定单击事件
+    //因为是在按钮创建之前就绑定了事件（AJAX），利用live方法绑定方法（JQuery新版的live方法替换成了on)
+    $(document).on("click", ".edit_btn", function () {
+        //0、查出部门信息
+        getDepts("#dept_update_select")
+        //1.查出员工信息
+        //通过JQuery查找
+        // getEmp($(this).parent().parent().children(":first").text())
+        //给编辑按钮构建一个属性，提前将员工id放入
+        getEmp($(this).attr("edit-id"));
+        // 2、把员工id传递给模态框的更新按钮
+        $("#emp_update_btn").attr("edit-id", $(this).attr("edit-id"));
+        $("#empUpdateModal").modal({
+            backdrop: "static"
+        })
+    })
+
+    //根据id获取员工信息
+    function getEmp(id) {
+        $.ajax({
+            url: "${requestScope.APP_PATH}/emp/" + id,
+            type: "GET",
+            success: function (result) {
+                $("#empName_update_static").empty();
+                // console.log(result)
+                var empEle = result.msg.extend.emp;
+                $("#empName_update_static").append(empEle.empName);
+                $("#email_update_input").val(empEle.email);
+                $("#empUpdateModal input[name=gender]").val([empEle.gender]);
+                $("#empUpdateModal select").val([empEle.dId])
+            }
+        })
+    }
+
+    //    点击更新，更新员工信息
+    $("#emp_update_btn").click(function () {
+        //验证邮箱是否合法
+        var email = $("#email_update_input").val();
+        var regEmail = /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/
+        if (!regEmail.test(email)) {
+            show_validate_msg("#email_add_input", "error", "邮箱格式不符合要求")
+            return false;
+        } else {
+            show_validate_msg("#email_add_input", "success", "")
+        }
+
+        //发送AJAX请求保存更新的数据
+        $.ajax({
+            url: "${requestScope.APP_PATH}/emp/" + $(this).attr("edit-id"),
+            type: "PUT",//也可以直接,需要配置HttpPutFormContentFilter过滤器
+            data: $("#empUpdateModal form").serialize()/*+"&_method=PUT"*/,
+            success: function (result) {
+                // alert(result.msg.msg)
+                // 1、关闭模态框，回到本页面
+                $("#empUpdateModal").modal('hide');
+                to_page(currentPage);
             }
         })
     })
